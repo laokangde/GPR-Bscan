@@ -1,0 +1,36 @@
+# -*- coding: utf-8 -*-
+"""
+Generate a GPR b-scan radargram only include hyperbola 
+Reference: Sparse Decomposition of the GPR Useful Signal  from Hyperbola Dictionary
+"""
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+t = np.arange(0,512)#Bscan size=512*512
+x = np.arange(0,512)
+
+f = 50;# the flattening of the hyperbola top located at (t0,x0)
+a = 1.5;#the opening of hyperbolas
+sigma = 5;# controls the thickness 
+x0 = 255;# hyperbola  top located at (x0,t0)
+t0 = 255;#
+alpha = 0.018;#impact the energy attenuation
+A = np.zeros((len(t),len(x)))#initialize the attenuation matrix
+
+for ii in range(0,len(t)):
+    for jj in range(0,len(x)):
+        A[ii,jj] = np.sqrt( (ii - t0)**2 + (jj - x0)**2 ) # with distance attenuation 
+        
+g = a * np.sqrt( f**2 + (x - x0)**2 )+ t0 - f*a #hyperbolas
+r = 2/(np.sqrt(3*sigma) * np.pi**(1/4) ) * (1 - t**2/sigma**2)*np.exp(-t**2/(2*sigma**2));#ricker-wavelet
+
+R = np.zeros((len(t),len(x))) #Bscan without attenuation
+for ii in range(0,len(x)):
+    R[:,ii] = 2/(np.sqrt(3*sigma) * np.pi**(1/4) ) * (1 - (t - g[ii] )**2/sigma**2)*np.exp(-(t - g[ii] )**2/(2*sigma**2))
+
+hyperbola = np.exp( -alpha * A ) * R;#Bscan with attenuation
+plt.figure
+plt.imshow(hyperbola)
+plt.show()
+
